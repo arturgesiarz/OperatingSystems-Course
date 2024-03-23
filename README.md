@@ -6,3 +6,4 @@ This repository contains the solutions of the laboratory conducted as part of th
 1.  [Makefile](https://github.com/arturgesiarz/SysOpy/tree/master/Lab1)
 2.  [Libraries - static, shared, dynamic](https://github.com/arturgesiarz/SysOpy/tree/master/Lab2)
 3.  [Mirror files](https://github.com/arturgesiarz/SysOpy/tree/master/Lab3)
+4.  [Processes](https://github.com/arturgesiarz/SysOpy/tree/master/Lab4)
