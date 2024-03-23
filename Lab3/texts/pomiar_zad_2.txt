@@ -1,0 +1,2 @@
+Time for copying byte by byte: 0.000343 seconds
+Time for copying block by block: 0.000178 seconds
