@@ -11,20 +11,23 @@ int main(int argc, char *argv[]) {
     int mode = atoi(argv[2]);
 
     printf("Sender PID: %d\n", getpid());
+    printf("Sending SIGUSR1 to catcher\n");
 
-    for (int i = 0; i < 10; ++i) {
-        printf("Sending SIGUSR1 to catcher\n");
-        //  Wysłanie sygnału SIGUSR1 do procesu o podanym identyfikatorze PID
-        union sigval value;
-        value.sival_int = mode;
-        sigqueue(catcher_pid, SIGUSR1, value);
+    //  Wysłanie sygnału SIGUSR1 do procesu o podanym identyfikatorze PID
+    union sigval value;
+    value.sival_int = mode;
 
-        // Utworzenie maski sygnałów
-        sigset_t wait_mask;
-        sigemptyset(&wait_mask);
-        sigaddset(&wait_mask, SIGUSR1);
-        sigsuspend(&wait_mask);
-    }
+    // Wysyłanie sygnałów z danymi do innego procesu
+    sigqueue(catcher_pid, SIGUSR1, value);
+
+    // Utworzenie maski sygnałów
+    sigset_t wait_mask;
+    // Czyszcze maskę sygnałów
+    sigemptyset(&wait_mask);
+    // Dodaje sygnał SIGUSR1
+    sigaddset(&wait_mask, SIGUSR1);
+    // Zawieszam wykonywanie procesu, oczekując na sygnał zdefiniowany w masce wait_mask
+    sigsuspend(&wait_mask);
 
     return EXIT_SUCCESS;
 }

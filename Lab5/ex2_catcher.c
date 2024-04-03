@@ -4,12 +4,10 @@
 #include <signal.h>
 #include <string.h>
 
-// Definicja zmiennej globalnej,
-// która będzie przechowywać liczbę odebranych sygnałów.
-// Zmienna ta jest zadeklarowana jako volatile sig_atomic_t,
-// co oznacza, że jest to zmienna atomowa, która może być bezpiecznie modyfikowana wewnątrz sygnałów.
-volatile sig_atomic_t received_signals = 0;
 
+// zmienna atomowa, która może być bezpiecznie modyfikowana wewnątrz sygnałów.
+// volatile, dlatego ze chcemy powiedziec kompilatorowi ze ta zmienna moze sie zmieniac od zewnatrz
+volatile sig_atomic_t received_signals = 0;
 
 // Funkcja ta zostanie wywołana, gdy proces otrzyma sygnał SIGUSR1.
 void sigusr1_handler(int signum, siginfo_t *info, void *context) {
@@ -37,10 +35,13 @@ void sigusr1_handler(int signum, siginfo_t *info, void *context) {
 }
 
 int main() {
+
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_sigaction = sigusr1_handler;
     sa.sa_flags = SA_SIGINFO;
+
+    // Zarejestrowanie procedury obsługi sygnału SIGUSR1
     sigaction(SIGUSR1, &sa, NULL);
 
     printf("Catcher PID: %d\n", getpid());
