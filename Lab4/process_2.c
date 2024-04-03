@@ -33,10 +33,10 @@ int main(int argc, char *argv[]) {
         printf("parent process\n");
         printf("parent pid = %d, child pid = %d\n", getpid(), pid);
         int status;
-        wait(&status);
-        if (WIFEXITED(status)) {
+        wait(&status);  // synchronizacja procesow macierzystych
+        if (WIFEXITED(status)) {  // proces zakonczyl sie poprawnie
             printf("child exit code: %d\n", WEXITSTATUS(status));
-        } else {
+        } else {  // proces nie zakonczyl sie poprawnie
             printf("descendant process failed!\n");
         }
         printf("parent's local = %d, parent's global = %d\n", local, global);
