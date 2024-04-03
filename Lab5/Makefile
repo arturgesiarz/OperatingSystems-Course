@@ -3,7 +3,7 @@ CXX = gcc
 CFLAGS = -Wall -Wextra
 BUILD_DIR = build
 
-all: ex1
+all: ex1 ex2_catcher ex2_sender
 
 $(BUILD_DIR)/ex1.o: ex1.c
 	$(CC) $(CFLAGS) -g -c ex1.c -o $(BUILD_DIR)/ex1.o
