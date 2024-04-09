@@ -9,7 +9,7 @@ void sigusr1_handler() {
 
 int main(int argc, char *argv[]) {
 
-    // Tworzenie i inicjalizacja zbioru sygnałów mask oraz dodanie do tego zbioru sygnału SIGUSR1
+    // Tworzenie i inicjalizacja zbioru sygnałów oraz dodanie do tego zbioru sygnału SIGUSR1
     sigset_t mask;
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);

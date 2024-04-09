@@ -20,14 +20,14 @@ int main(int argc, char *argv[]) {
     // Wysyłanie sygnałów z danymi do innego procesu
     sigqueue(catcher_pid, SIGUSR1, value);
 
-    // Utworzenie maski sygnałów
-    sigset_t wait_mask;
-    // Czyszcze maskę sygnałów
-    sigemptyset(&wait_mask);
-    // Dodaje sygnał SIGUSR1
-    sigaddset(&wait_mask, SIGUSR1);
-    // Zawieszam wykonywanie procesu, oczekując na sygnał zdefiniowany w masce wait_mask
-    sigsuspend(&wait_mask);
+//    // Utworzenie maski sygnałów
+//    sigset_t wait_mask;
+//    // Czyszcze maskę sygnałów
+//    sigemptyset(&wait_mask);
+//    // Dodaje sygnał SIGUSR1
+//    sigaddset(&wait_mask, SIGUSR1);
+//    // Zawieszam wykonywanie procesu, oczekując na sygnał zdefiniowany w masce wait_mask
+//    sigsuspend(&wait_mask);
 
     return EXIT_SUCCESS;
 }
