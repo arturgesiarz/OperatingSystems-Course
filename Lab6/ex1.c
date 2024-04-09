@@ -22,14 +22,23 @@ double calculate_integral(double start, double end, double width) {
 
 int main(int argc, char *argv[]) {
 
+    // atof - zamienia stringa na double
     double width = atof(argv[1]);
+
+    // atoi - zamienia stringa na inta
     int num_processes = atoi(argv[2]);
+
+    // Obliczam dlugosc przedzialu
     double interval = 1.0 / num_processes;
 
+    // Tworze tablicę potoków, które będą używane
+    // do komunikacji między procesami potomnymi a procesem macierzystym
     int fd[num_processes][2];
     double results[num_processes];
 
+    // Iteracja po wszystkich procesach
     for (int i = 0; i < num_processes; i++) {
+
         if (pipe(fd[i]) == -1) {
             perror("Pipe creation failed");
             return 1;

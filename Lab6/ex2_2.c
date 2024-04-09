@@ -16,7 +16,7 @@ double calculate_integral(double start, double end, double width) {
     return sum;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     double start, end;
 
     int fd = open("pipe", O_RDONLY);

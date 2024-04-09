@@ -13,6 +13,8 @@ int main() {
     printf("Enter the end of the interval: ");
     scanf("%lf",&end);
 
+    // 0 - Oznacza, że nie ma żadnych uprawnień specjalnych
+    // 666 - Oznacza, że każdy użytkownik ma pełne uprawnienia do odczytu i zapisu do potoku
     if (mkfifo("pipe", 0666) == -1) {
         perror("Failed to create named pipe");
         exit(1);
