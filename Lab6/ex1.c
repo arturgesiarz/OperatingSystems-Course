@@ -50,7 +50,6 @@ int main(int argc, char *argv[]) {
 
             write(fd[i][1], &result, sizeof(double));
             close(fd[i][1]);
-
             return 0;
         }
     }
