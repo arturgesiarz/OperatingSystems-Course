@@ -1,3 +1,4 @@
+// Wykorzystanko System V
 #include <sys/types.h>
 #include <sys/msg.h>
 #include <fcntl.h>

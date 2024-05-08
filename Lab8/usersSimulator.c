@@ -1,3 +1,4 @@
+// Wykorzystano POSIX
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -73,44 +74,46 @@ int main(int argc, char** argv) {
                 for (int j = 0; j < memory_map->numberOfPrinters; j++) {
                     int val;
 
+                    // Pobieranie biezacej wartosci semafora
                     sem_getvalue(&memory_map->printers[j].printerSemaphore, &val);
 
+                    // Znaleziono wolna drukarke
                     if(val > 0) {
                         printer_index = j;
                         break;
                     }
                 }
 
-                /**
-                 * if all printers are busy, dispatch work to random printer to uniformly distribute work
-                */
+                // Jeśli wszystkie drukarki są zajęte
+                // wysłamy prace do losowej drukarki w celu równomiernego rozłożenia pracy
                 if(printer_index == -1)
                     printer_index = rand() % memory_map->numberOfPrinters;
 
-                /* try to decrement semaphore, blocks program if the printer is currently busy */
+                // Próbuje zmniejszyć semafor,
+                // blokuje program, jeśli drukarka jest aktualnie zajęta
                 if(sem_wait(&memory_map->printers[printer_index].printerSemaphore) < 0)
                     perror("sem_wait");
 
-                /* copy data to printer buffer */
+                // Kopiowanie danych do bufora drukarki
                 memcpy(memory_map->printers[printer_index].printerBuffer, user_buffer, MAX_PRINTER_BUFFER_SIZE);
                 memory_map->printers[printer_index].printerBufferSize = strlen(user_buffer);
 
-                /* set printer state to printing */
+                // Ustawienie stanu drukarki na drukowanie
                 memory_map->printers[printer_index].printerState = PRINTING;
 
                 printf("User %d is printing on printer %d\n", i, printer_index);
                 fflush(stdout);
 
-                /* sleep for random amount of time before trying to dispatch new work */
+                // Uśpienie na losową ilość czasu przed próbą wysłania nowej pracy
                 sleep(rand() % 3 + 1);
             }
             exit(0);
         }
     }
 
-    // wait for all children to finish
+    // Czekamy aż wszystkie dzieci skończą
     while(wait(NULL) > 0) {};
 
-    // unmap memory map
+    // Odmapowanie mapy pamięci
     munmap(memory_map, sizeof(memoryMapT));
 }

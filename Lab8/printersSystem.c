@@ -1,3 +1,4 @@
+// Wykorzystano POSIX
 #include <stdio.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
