@@ -13,7 +13,6 @@ typedef enum CallType {
 } CallType;
 
 typedef struct Message {
-    //
     long messageType;
     char message[ MAX_TEXT ];
 
