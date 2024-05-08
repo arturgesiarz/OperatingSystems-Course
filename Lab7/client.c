@@ -1,74 +1,90 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <sys/msg.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include "common.h"
 
-#define SERVER_QUEUE_KEY 1234
+int sendInitMessage( key_t clientMsgQueueKey, int msgQueueServerID ) {
+    Message messageSend = {};
 
-struct message {
-    long mtype;
-    char mtext[256];
-};
+    messageSend.callType = INIT;
+    messageSend.clientMsgQueueKey = clientMsgQueueKey;
+    messageSend.messageType = 1;
 
-int main() {
-    int server_queue;
+    int msgQueueClientID = msgget (clientMsgQueueKey, 0666);
+    if ( msgQueueClientID < 0 ) { perror ("Client - open queue error"); return 1; }
 
-    // Uzyskiwanie dostępu do kolejki serwera
-    if ((server_queue = msgget(SERVER_QUEUE_KEY, 0666)) == -1) {
-        perror("msgget");
-        exit(1);
+    if ( msgsnd (msgQueueServerID, &messageSend, sizeof(messageSend) - sizeof(long), 0) < 0 ) {
+        perror ("Client - send message error");
+        return 1;
     }
 
-    // Wysyłanie komunikatu INIT do serwera
-    struct message init_msg;
-    init_msg.mtype = SERVER_QUEUE_KEY;
-    strcpy(init_msg.mtext, "INIT");
-    if (msgsnd(server_queue, &init_msg, sizeof(struct message), 0) == -1) {
-        perror("msgsnd");
-        exit(1);
+    Message messageReceived = {};
+
+    if ( msgrcv (msgQueueClientID, &messageReceived, sizeof(messageReceived) - sizeof(long), 1, 0) < 0 ) {
+        perror ("Client - receive message error");
+        return 1;
     }
 
-    printf("Oczekiwanie na identyfikator...\n");
+    return messageReceived.clientID;
+}
 
-    // Odbieranie identyfikatora od serwera
-    struct message client_msg;
-    if (msgrcv(server_queue, &client_msg, sizeof(struct message), 1, 0) == -1) {
-        perror("msgrcv");
-        exit(1);
-    }
+int main () {
+    //
+    srand ( time(NULL) );
+    key_t clientMsgQueueKey = rand() % 900 + 100;
 
-    int client_queue_id = atoi(client_msg.mtext);
-    printf("Otrzymano identyfikator klienta: %d\n", client_queue_id);
+    int msgQueueClientID = msgget (clientMsgQueueKey, 0666 | IPC_CREAT);
+    int msgQueueServerID = msgget ( (key_t) SERVER_ID, 0666 );
 
-    // Tworzenie nowego procesu do odbierania komunikatów od serwera
-    pid_t pid = fork();
-    if (pid == -1) {
-        perror("fork");
-        exit(1);
-    } else if (pid == 0) { // Proces dziecka - odbieranie komunikatów
-        struct message msg;
+    if (msgQueueClientID < 0) { perror("Client - open client queue error"); return 1; }
+    if (msgQueueServerID < 0) { perror("Client - open server queue error"); return 1; }
+
+    int clientID = sendInitMessage( clientMsgQueueKey, msgQueueServerID );
+
+    pid_t pid = fork ();
+    if ( pid < 0 ) { printf ("Error - fork()"); return 1; }
+
+    if ( pid != 0 ) {
+
         while (1) {
-            if (msgrcv(client_queue_id, &msg, sizeof(msg.mtext), 0, 0) == -1) {
-                perror("msgrcv");
-                exit(1);
-            }
-            printf("Otrzymano wiadomość od serwera: %s\n", msg.mtext);
-        }
-    } else { // Proces rodzica - wysyłanie komunikatów
-        struct message msg;
-        while (1) {
-            printf("Wpisz wiadomość: ");
-            fgets(msg.mtext, sizeof(msg.mtext), stdin);
-            msg.mtype = SERVER_QUEUE_KEY;
-            if (msgsnd(server_queue, &msg, sizeof(msg.mtext), 0) == -1) {
-                perror("msgsnd");
-                exit(1);
+            printf ("What message are you going to send to other clients?\n");
+            fflush (stdout);
+
+            char message[ MAX_TEXT ];
+            fgets (message, MAX_TEXT, stdin);
+
+            Message messageSend = {};
+            messageSend.callType = OTHER;
+            messageSend.messageType = 1;
+            messageSend.clientID = clientID;
+            messageSend.clientMsgQueueKey = clientMsgQueueKey;
+            strcpy ( messageSend.message, message );
+
+
+            if ( msgsnd (msgQueueServerID, &messageSend, sizeof(messageSend) - sizeof(long), 0) < 0 ) {
+                perror ("Client - message send error");
+                return 2;
             }
         }
     }
+    else {
+        int msgQueueClientID = msgget (clientMsgQueueKey, 0666);
+        Message messageReceived = {};
 
+        while (1) {
+            if ( msgrcv (msgQueueClientID, &messageReceived, sizeof(messageReceived) - sizeof(long), 1, 0) < 0 ) {
+                perror ("Client - message receive error in parent process");
+                return 3;
+            }
+            puts ( messageReceived.message );
+        }
+    }
+
+    msgctl (msgQueueClientID, IPC_RMID, NULL);
     return 0;
 }

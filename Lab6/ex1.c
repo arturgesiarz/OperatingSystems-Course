@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
     // Iteracja po wszystkich procesach
     for (int i = 0; i < num_processes; i++) {
 
+        // tworzenie potoku nienazwowego
         if (pipe(fd[i]) == -1) {
             perror("Pipe creation failed");
             return 1;
@@ -46,18 +47,25 @@ int main(int argc, char *argv[]) {
 
         pid_t pid = fork();
 
+        // proces macierzysty
         if (pid == -1) {
             perror("Fork failed");
             return 1;
 
-        } else if (pid == 0) {
+        }
+
+        // proces potomny
+        else if (pid == 0) {
             close(fd[i][0]);
 
             double start = i * interval;
             double end = start + interval;
             double result = calculate_integral(start, end, width);
 
+            // zapisywanie danych
             write(fd[i][1], &result, sizeof(double));
+
+            // zamykam potok
             close(fd[i][1]);
             return 0;
         }

@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    // czytamy z potoku zakres naszej calki
     if (read(fd, &start, sizeof(double)) == -1 || read(fd, &end, sizeof(double)) == -1) {
         perror("Read from pipe failed");
         exit(1);

@@ -1,75 +1,98 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
 #include <sys/types.h>
-#include <sys/ipc.h>
 #include <sys/msg.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdlib.h>
+#include "common.h"
+#include <time.h>
+#include <unistd.h>
 
-#define MAX_CLIENTS 10
-#define SERVER_QUEUE_KEY 1234
+int currentClientIndex = 0;
+key_t clients[MAX_CLIENTS_NUMBER];
 
-struct message {
-    long mtype;
-    char mtext[256];
-};
+void handleINIT (Message* messageReceived) {
+    key_t msgQueueKey = messageReceived -> clientMsgQueueKey;
+    clients[ currentClientIndex ] = msgQueueKey;
 
-int main() {
-    int server_queue;
-    int client_queues[MAX_CLIENTS];
-    int num_clients = 0;
+    int msgQueueID = msgget ( msgQueueKey, 0666);
+    if (msgQueueID < 0 ) { perror("Server - receive message error in handleINIT"); return; }
 
-    // Tworzenie kolejki serwera
-    if ((server_queue = msgget(SERVER_QUEUE_KEY, IPC_CREAT | 0666)) == -1) {
-        perror("msgget");
-        exit(1);
+    Message messageSend;
+    memset (&messageSend, 0, sizeof(messageSend));
+
+    messageSend.clientID = currentClientIndex;
+    messageSend.callType = INIT_RESPONSE;
+    messageSend.messageType = 1;
+
+    if ( msgsnd(msgQueueID, &messageSend, sizeof(messageSend) - sizeof(long), 0) < 0 ) {
+        perror ("Server - send message error");
+        return;
     }
 
-    printf("Serwer uruchomiony. Oczekiwanie na klientów...\n");
+    currentClientIndex++;
+}
+
+void handleOTHER (Message* messageReceived) {
+    //
+    int clientID = messageReceived -> clientID;
+
+    for (int a = 0; a < currentClientIndex; a++) {
+        if ( a == clientID ) { continue; }
+
+        Message messageSend = {};
+        messageSend.callType = OTHER;
+        messageSend.clientID = a;
+        messageSend.messageType = 1;
+        strcpy (messageSend.message, messageReceived->message);
+
+        int msgQueueID = msgget ( clients[a], 0666 );
+        if ( msgQueueID < 0 ) { perror ("Server - open queue error"); return; }
+
+        if ( msgsnd (msgQueueID, &messageSend, sizeof(messageSend) - sizeof(long), 0) ) {
+            perror ("Server - send message error");
+            return;
+        }
+    }
+}
+
+void loop ( int msgQueueID ) {
+    int err;
 
     while (1) {
-        struct message msg;
-        // Odbieranie komunikatów od klientów
-        if (msgrcv(server_queue, &msg, sizeof(struct message), 0, 0) == -1) {
-            perror("msgrcv");
-            exit(1);
-        }
+        Message messageReceived = {};
+        err = msgrcv (msgQueueID, &messageReceived, sizeof(messageReceived) - sizeof(long), 1, 0);
 
-        // Obsługa komunikatu INIT
+        if (err < 0) { perror("Server - receive message error in loop function"); msgctl (msgQueueID, IPC_RMID, NULL); return; }
 
-        if (strcmp(msg.mtext, "INIT") == 0) {
-            if (num_clients < MAX_CLIENTS) {
-                // Tworzenie nowej kolejki klienta
-                key_t client_key = ftok("/tmp", num_clients);
-                int client_queue = msgget(client_key, IPC_CREAT | 0666);
-                if (client_queue == -1) {
-                    perror("msgget");
-                    exit(1);
-                }
-                client_queues[num_clients++] = client_queue;
-
-                // Wysyłanie identyfikatora klientowi
-                snprintf(msg.mtext, sizeof(msg.mtext), "%d", num_clients);
-                msg.mtype = 1;
-                if (msgsnd(client_queue, &msg, sizeof(struct message), 0) == -1) {
-                    perror("msgsnd");
-                    exit(1);
-                }
-            } else {
-                printf("Osiągnięto maksymalną liczbę klientów.\n");
-            }
-        } else {
-            // Przekazywanie komunikatu od klienta do wszystkich pozostałych klientów
-            for (int i = 0; i < num_clients; i++) {
-                if (client_queues[i] != msg.mtype) {
-                    if (msgsnd(client_queues[i], &msg, sizeof(struct message), 0) == -1) {
-                        perror("msgsnd");
-                        exit(1);
-                    }
-                }
-            }
+        switch ( messageReceived.callType ) {
+            case INIT:
+                handleINIT (&messageReceived);
+                break;
+            case OTHER:
+                handleOTHER (&messageReceived);
+                break;
         }
     }
+}
 
+void handleSIGINT(int signal) {
+    printf ("Deleting server message queue\n");
+    fflush (stdout);
+    int msgQueueID = msgget ( (key_t) SERVER_ID, 0666 | IPC_CREAT );
+    msgctl (msgQueueID, IPC_RMID, NULL);
+}
+
+int main () {
+    signal(SIGINT, &handleSIGINT);
+
+    int msgQueueID = msgget ( (key_t) SERVER_ID, 0666 | IPC_CREAT );
+    if ( msgQueueID < 0 ) { perror("Server - open queue error"); return 1; }
+
+    loop (msgQueueID);
+
+    msgctl (msgQueueID, IPC_RMID, NULL);
     return 0;
 }

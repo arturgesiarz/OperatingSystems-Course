@@ -13,6 +13,7 @@ int main() {
     printf("Enter the end of the interval: ");
     scanf("%lf",&end);
 
+    // tworzymy potok nazwany
     // 0 - Oznacza, że nie ma żadnych uprawnień specjalnych
     // 666 - Oznacza, że każdy użytkownik ma pełne uprawnienia do odczytu i zapisu do potoku
     if (mkfifo("pipe", 0666) == -1) {
@@ -46,6 +47,8 @@ int main() {
     }
 
     close(fd);
+
+    // usuwamy potok nazwowy
     unlink("pipe");
     printf("Result: %f\n", result);
 
