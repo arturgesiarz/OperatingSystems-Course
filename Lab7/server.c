@@ -123,6 +123,5 @@ int main () {
 
     // Usuniecie kolejki
     msgctl (msgQueueID, IPC_RMID, NULL);
-
     return 0;
 }

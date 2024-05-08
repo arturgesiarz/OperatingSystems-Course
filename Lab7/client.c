@@ -42,7 +42,7 @@ int sendInitMessage( key_t clientMsgQueueKey, int msgQueueServerID ) {
 int main () {
     srand ( time(NULL) );
 
-    // Losowanie kluczy z zakresu 100 - 999
+    // Losowanie kodow z zakresu 100 - 999
     key_t clientMsgQueueKey = rand() % 900 + 100;
 
     // Pobranie istniejącej kolejki komunikatów lub jej stworzenie.
@@ -78,7 +78,7 @@ int main () {
             messageSend.clientMsgQueueKey = clientMsgQueueKey;
             strcpy ( messageSend.message, message );
 
-            // Wyslanie wiadomosci do serwera
+
             if ( msgsnd (msgQueueServerID, &messageSend, sizeof(messageSend) - sizeof(long), 0) < 0 ) {
                 perror ("Client - message send error");
                 return 2;
