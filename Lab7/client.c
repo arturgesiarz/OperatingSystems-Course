@@ -78,7 +78,7 @@ int main () {
             messageSend.clientMsgQueueKey = clientMsgQueueKey;
             strcpy ( messageSend.message, message );
 
-
+            // Wyslanie wiadomosci do serwera
             if ( msgsnd (msgQueueServerID, &messageSend, sizeof(messageSend) - sizeof(long), 0) < 0 ) {
                 perror ("Client - message send error");
                 return 2;
