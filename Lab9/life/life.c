@@ -96,7 +96,7 @@ int main()
 	{
 		draw_grid(foreground);
 
-        // bedze watki za pomoca zadeklarowanych wczesniej sygnalow
+        // budze watki za pomoca zadeklarowanych wczesniej sygnalow
         for (int i = 0; i < THREAD_COUNT; i++) {
             pthread_kill(threads[i], SIGUSR1);
         }
