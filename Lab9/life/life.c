@@ -10,7 +10,7 @@
 #include <math.h>
 #include <signal.h>
 
-// ...
+// preprocesor definujacy liczbe watkow
 #define THREAD_COUNT 12
 
 typedef struct {
@@ -96,6 +96,7 @@ int main()
 	{
 		draw_grid(foreground);
 
+        // bedze watki za pomoca zadeklarowanych wczesniej sygnalow
         for (int i = 0; i < THREAD_COUNT; i++) {
             pthread_kill(threads[i], SIGUSR1);
         }
