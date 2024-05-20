@@ -19,10 +19,9 @@ int reindeer_available = 0;
 int gifts_delivered = 0;
 
 // funkcja wysylajaca na wakacje danego renifera
-void summer_time(int* reindeerID) {
+void summer_time() {
     srand(time(NULL));
     int sleep_time = 5 + rand() % 6;
-    printf("Reindeer no: %d. There is no available for %d seconds.\n", *reindeerID, sleep_time);
     sleep(sleep_time);
 }
 
@@ -30,28 +29,31 @@ void summer_time(int* reindeerID) {
 void give_toys() {
     srand(time(NULL));
     int sleep_time = 2 + rand() % 3;
-    printf("Santa's giving toys!\n");
+    printf("Mikołaj: dostarczam zabawki\n");
     sleep(sleep_time);
 }
 
 // funkcja renifera
 void* reindeer(void* arg) {
     // pobieranie ID danego renifera
-    int* reindeerID = (int*) arg;
+    int reindeerID = *(int*) arg;
 
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
     while (gifts_delivered < MAX_GIFTS) {
 
         // posylanie go na wakacje
-        summer_time(reindeerID);
+        summer_time();
 
         // teraz nalezy zwiekszyc liczbe dostepnych reniferow bo renifer jest po wakacjach
         pthread_mutex_lock(&mutexReindeer);
         reindeer_available += 1;
 
+        printf("Renifer: czeka %d reniferow na Mikołaja, id: %d\n", reindeer_available, reindeerID);
+
         // budze mikolaja wtedy kiedy mam do dyspozycji 9 reniferow
         if (reindeer_available == 9) {
+            printf("Renifer: wybudzam mikołaja, id: %d\n", reindeerID);
             pthread_cond_signal(&condReindeer);
             reindeer_available = 0;
         }
@@ -71,13 +73,13 @@ void* santa(void* arg) {
 
         // czekam na sygnal ze mam juz dostepnych 9 reniferow
         pthread_cond_wait(&condReindeer, &mutexReindeer);
-        printf("Santa's waking up!\n");
+        printf("Mikołaj: budze sie\n");
 
         // dostarczenie zabawek
         pthread_mutex_lock(&mutexGift);
         give_toys();
         gifts_delivered += 1;
-        printf("Santa's going to sleep!\n");
+        printf("Mikołaj: zasypiam\n");
         pthread_mutex_unlock(&mutexGift);
 
         pthread_cond_broadcast(&condGift);
@@ -116,6 +118,8 @@ int main() {
     pthread_mutex_destroy(&mutexGift);
     pthread_cond_destroy(&condGift);
     pthread_cond_destroy(&condReindeer);
+
+    printf("System: Wszystkie prezenty dostarczone!\n");
 
    return 0;
 }
