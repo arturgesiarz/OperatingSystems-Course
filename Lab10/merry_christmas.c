@@ -15,7 +15,7 @@ pthread_cond_t condGift = PTHREAD_COND_INITIALIZER;
 pthread_cond_t condReindeer = PTHREAD_COND_INITIALIZER;
 pthread_mutex_t mutexReindeer = PTHREAD_MUTEX_INITIALIZER;
 
-int reindeer_available = REINDEER_NUMBER;
+int reindeer_available = 0;
 int gifts_delivered = 0;
 
 // funkcja wysylajaca na wakacje danego renifera
@@ -30,7 +30,7 @@ void summer_time(int* reindeerID) {
 void give_toys() {
     srand(time(NULL));
     int sleep_time = 2 + rand() % 3;
-    printf("Santa's giving toys!");
+    printf("Santa's giving toys!\n");
     sleep(sleep_time);
 }
 
@@ -39,12 +39,9 @@ void* reindeer(void* arg) {
     // pobieranie ID danego renifera
     int* reindeerID = (int*) arg;
 
-    while (gifts_delivered < MAX_GIFTS) {
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
-        // przed poslaniem na wakacje odejmujemy liczbe dostepnych reniferow
-        pthread_mutex_lock(&mutexReindeer);
-        reindeer_available -= 1;
-        pthread_mutex_unlock(&mutexReindeer);
+    while (gifts_delivered < MAX_GIFTS) {
 
         // posylanie go na wakacje
         summer_time(reindeerID);
@@ -52,11 +49,18 @@ void* reindeer(void* arg) {
         // teraz nalezy zwiekszyc liczbe dostepnych reniferow bo renifer jest po wakacjach
         pthread_mutex_lock(&mutexReindeer);
         reindeer_available += 1;
+
+        // budze mikolaja wtedy kiedy mam do dyspozycji 9 reniferow
+        if (reindeer_available == 9) {
+            pthread_cond_signal(&condReindeer);
+            reindeer_available = 0;
+        }
         pthread_mutex_unlock(&mutexReindeer);
-        pthread_cond_signal(&condReindeer);
 
         // usypiamy watek opoczynku reniferow
+        pthread_mutex_lock(&mutexGift);
         pthread_cond_wait(&condGift, &mutexGift);
+        pthread_mutex_unlock(&mutexGift);
     }
 }
 
@@ -65,22 +69,17 @@ void* reindeer(void* arg) {
 void* santa(void* arg) {
     for (int i = 0; i < MAX_GIFTS; i++) {
 
-        // pozyskanie odpowiedniej ilosci reniferow
-        pthread_mutex_lock(&mutexReindeer);
-        while (reindeer_available < REINDEER_NUMBER) {
-            printf("Santa's waiting for reindeer. Number of reindeer is %d. There's %d left\n",
-                   reindeer_available, REINDEER_NUMBER - reindeer_available);
-            pthread_cond_wait(&condReindeer, &mutexReindeer);
-        }
-        printf("Santa's waking up!");
-        pthread_mutex_unlock(&mutexReindeer);
+        // czekam na sygnal ze mam juz dostepnych 9 reniferow
+        pthread_cond_wait(&condReindeer, &mutexReindeer);
+        printf("Santa's waking up!\n");
 
         // dostarczenie zabawek
         pthread_mutex_lock(&mutexGift);
         give_toys();
         gifts_delivered += 1;
-        printf("Santa's going to sleep!");
+        printf("Santa's going to sleep!\n");
         pthread_mutex_unlock(&mutexGift);
+
         pthread_cond_broadcast(&condGift);
     }
 }
