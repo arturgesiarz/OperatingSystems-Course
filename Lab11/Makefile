@@ -3,7 +3,7 @@ CXX = gcc
 CFLAGS = -Wall -Wextra
 BUILD_DIR = build
 
-PORT = 4996
+PORT = 4995
 
 
 all: clean create_dir client server

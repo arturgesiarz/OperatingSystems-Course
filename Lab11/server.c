@@ -43,11 +43,11 @@ int main(int argc, char** argv) {
     // Utworzenie soketu
     int socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 
-    // Sprawdzenie czy dany port nie jest zajety
+    // Bindowanie soketu
     if (bind(socket_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
         perror("bind");
 
-    // ...
+    // Definujemy maksymalna liczbe klientow
     if (listen(socket_fd, MAX_CLIENTS) < 0)
         perror("listen");
 
@@ -58,7 +58,6 @@ int main(int argc, char** argv) {
     bool client_id_set[MAX_CLIENTS] = {0};
     char client_id_array[MAX_CLIENTS][MAX_CLIENT_ID_LEN] = {0};
 
-    // ...
     clock_t clients_alive_timeout[MAX_CLIENTS];
 
     clock_t ping_time = clock();
@@ -82,8 +81,6 @@ int main(int argc, char** argv) {
 
             if (i == MAX_CLIENTS)
                 printf("Client limit reached\n");
-
-
         }
 
         for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -153,7 +150,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Wysylanie ALIVE do wszystkich klientow
+        // Wysylanie ALIVE do wszystkich klientow - w celu sprawdzenia czy zyje
         if ((clock() - ping_time) / CLOCKS_PER_SEC > 1) {
             request_message_t alive_message = {
                     .request_type = ALIVE

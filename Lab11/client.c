@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     if (listener_pid < 0)
         perror("fork listener");
 
-    // Proces potomny
+    // Proces potomny - jest do wyswietlania wynikow
     else if (listener_pid == 0) {
         while (!should_close) {
             request_message_t message;
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
             }
         }
     }
-    // Obsluga procesu macierzystego
+    // Proces macierzysty - jest do laczenia sie z serwerem
     else {
         char* request_type_input_buffer = NULL;
 
