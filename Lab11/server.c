@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 
             request_message_t message;
 
-            // Sprawdzam czy od klienta przyszla jakas wiadomosc
+            // Sprawdzam czy od klienta przyszla jakas wiadomosc, nie blokujac watku
             if(recv(clients_fd_array[i], &message, sizeof(message), MSG_DONTWAIT) > 0) {
                 switch(message.request_type) {
                     case TOALL:

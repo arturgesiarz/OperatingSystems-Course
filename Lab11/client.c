@@ -68,7 +68,11 @@ int main(int argc, char** argv) {
     else if (listener_pid == 0) {
         while (!should_close) {
             request_message_t message;
+
+            // Blokowanie watku poki nie otrzymamy wiadomosci
             recv(socket_fd, &message, sizeof(message), MSG_WAITALL);
+
+            // Wyswietlamy wyniki jakie nam przetworzyl serwer
             switch(message.request_type) {
                 case LIST:
                     for (int i = 0; i < message.payload.list.list_length; i++) {
@@ -93,6 +97,8 @@ int main(int argc, char** argv) {
     // Obsluga procesu macierzystego
     else {
         char* request_type_input_buffer = NULL;
+
+        // Wysylanie do serwera konkretnych zapytan, ktore chcemy osiaganac
         while (!should_close) {
             if(scanf("%ms", &request_type_input_buffer) == 1) {
                 request_message_t message;
