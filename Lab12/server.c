@@ -43,6 +43,12 @@ int main(int argc, char** argv) {
     // Utworzenie soketu
     int socket_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 
+    // ...
+    int t = 1;
+
+    // ...
+    setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &t, sizeof(int));
+
     // Sprawdzenie czy dany port nie jest zajety
     if (bind(socket_fd, (struct sockaddr*)&addr, sizeof(addr)) < 0)
         perror("bind");
