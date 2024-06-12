@@ -1,0 +1,5 @@
+#ifndef SYSOPY_PROT_SPEC_H
+#define SYSOPY_PROT_SPEC_H
+
+
+#endif //SYSOPY_PROT_SPEC_H
