@@ -3,6 +3,9 @@ CXX = gcc
 CFLAGS = -Wall -Wextra
 BUILD_DIR = build
 
+PORT = 4997
+
+
 all: clean create_dir client server
 
 create_dir:
@@ -19,6 +22,18 @@ $(BUILD_DIR)/server.o: server.c
 
 server: $(BUILD_DIR)/server.o
 	$(CC) $(CFLAGS) -g -o server $(BUILD_DIR)/server.o
+
+run_server:
+	./server 127.0.0.1 $(PORT)
+
+run_client_1:
+	./client client1 127.0.0.1 $(PORT)
+
+run_client_2:
+	./client client2 127.0.0.1 $(PORT)
+
+run_client_3:
+	./client client3 127.0.0.1 $(PORT)
 
 clean:
 	rm -rf build
